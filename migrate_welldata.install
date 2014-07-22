@@ -1,0 +1,67 @@
+<?php
+
+/**
+ * @file
+ * Set up the well migration module.
+ */
+
+function migrate_welldata_enable() {
+  $path = dirname(__FILE__) . '/data';
+  migrate_welldata_get_files($path);
+  for ($i=0; $i<=9; $i++) {
+    $file = 'GL200' . $i . '.TXT';
+    Migration::registerMigration('WellDataMigrate',
+      pathinfo($file, PATHINFO_FILENAME),
+      array('source_file' => $path . '/' . $file, 'group_name' => 'baseball'));
+  }
+}
+
+/**
+ * Obtain our sample data from Retrosheet.
+ *
+ * @param $path
+ */
+function migrate_welldata_get_files($path) {
+  // Don't replace old upper-case names
+  if (!file_exists("$path/GL2000.TXT") && !file_exists("$path/gl2000.txt")) {
+    file_prepare_directory($path, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
+    $result = copy('http://www.retrosheet.org/gamelogs/gl2000_09.zip',
+                   $path . '/gl2000_09.zip');
+    if ($result) {
+      $zip = new ZipArchive();
+      $zip->open($path . '/gl2000_09.zip');
+      $zip->extractTo($path);
+      $zip->close();
+      unlink("$path/gl2000_09.zip");
+    }
+  }
+}
+
+function migrate_welldata_uninstall() {
+  $bundle = 'migrate_welldata';
+  $field_names = array('field_date','field_time1','field_datetime','field_level','field_units','field_well_calibration','field_well');
+  foreach ($field_names as $field_name) {
+    $instance = field_info_instance('node', $field_name, $bundle);
+    field_delete_instance($instance);
+    field_delete_field($field_name);
+  }
+  node_type_delete($bundle);
+}
+
+function migrate_welldata_disable() {
+  for ($i=0; $i<=9; $i++) {
+    $file = 'GL200' . $i . '.TXT';
+    Migration::deregisterMigration(pathinfo($file, PATHINFO_FILENAME));
+    $filename = dirname(__FILE__) . '/data/' . $file;
+    if (file_exists($filename)) {
+      unlink($filename);
+    }
+  }
+}
+
+/**
+ * Get a copy of the sample CSV data if necessary.
+ */
+function migrate_welldata_update_7201() {
+  migrate_welldata_get_files(dirname(__FILE__) . '/data');
+}
