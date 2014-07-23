@@ -13,6 +13,18 @@
 function migrate_welldata_migrate_api() {
   $api = array(
     'api' => 2,
+    'groups' => array(
+      'welldata' => array(
+        'title' => t('Well Data'),
+        'default_format' => 'filtered_html',
+      ),
+    ),
+    'migrations' => array(
+      'WellData' => array(
+        'class_name' => 'WellDataMigrate',
+        'group_name' => 'welldata',
+      ),
+    ),
   );
   return $api;
 }
@@ -109,5 +121,6 @@ class WellDataMigrate extends Migration {
       $key[$field_name] = $row->$field_name;
     }
     return $key;
+  }
 }
-}
+
