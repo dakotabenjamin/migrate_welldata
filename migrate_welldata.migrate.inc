@@ -40,15 +40,10 @@ class WellDataMigrate extends Migration {
     // Create a map object for tracking the relationships between source rows
     $this->map = new MigrateSQLMap($this->machineName,
         array(
-          'datetime' => array('type' => 'varchar',
-                           'length' => 10,
-                           'not null' => TRUE,
-                           'description' => 'date',
-                          ),
-          'serial' => array('type' => 'varchar',
+          'key' => array('type' => 'varchar',
                            'length' => 255,
                            'not null' => TRUE,
-                           'description' => 'well serial',
+                           'description' => 'A unique key in the format [serial]-[datetime]',
                           ),
         ),
         MigrateDestinationNode::getKeySchema()
@@ -59,15 +54,15 @@ class WellDataMigrate extends Migration {
 
     $this->destination = new MigrateDestinationNode('migrate_welldata');
 
-    $this->addFieldMapping('well', 'well')
-         ->description('See prepareRow().');
+    $this->addFieldMapping('field_key', 'key')->description('see prepareKey');
+    $this->addFieldMapping('field_serial', 'well serial')
+         ->description('See prepareKey().');
     $this->addFieldMapping('field_date', 'date');
     $this->addFieldMapping('field_time1', 'time');
     $this->addFieldMapping('field_datetime', 'datetime');
     $this->addFieldMapping('field_level', 'level');
     $this->addFieldMapping('field_units', 'units');
     $this->addFieldMapping('field_well_calibration', 'calibration');
-    $this->addFieldMapping('field_well_well', 'well');
 
   }
 
@@ -86,11 +81,6 @@ class WellDataMigrate extends Migration {
     }
     
     //Skip rows where level == --.-
-  
-    //Make the serial >>>>>>>>>>>>> FIGURE OUT <<<<<<<<<<<<<<<<
-
-    // Turn date and time into datetime
-    $row->datetime = strtotime($row->date . " " . $row->time);
     
     // convert to cm
     if($row->units == "in") {
@@ -116,10 +106,16 @@ class WellDataMigrate extends Migration {
   }
   
   public function prepareKey($source_key, $row) {
-    $key = array();
-    foreach ($source_key as $field_name => $field_schema) {
-      $key[$field_name] = $row->$field_name;
-    }
+  
+    //Make row->serial
+    $serial = ltrim(explode("_",pathinfo($this->arguments['source_file'],PATHINFO_FILENAME))[0],"0"); 
+    $row->serial = $serial;
+  
+    // Turn date and time into datetime
+    $row->datetime = strtotime($row->date . " " . $row->time);
+    
+    $key = array($source_key[0] => $row->serial . "-" . $row->datetime);
+    $row->key = $key[$source_key[0]];
     return $key;
   }
 }
