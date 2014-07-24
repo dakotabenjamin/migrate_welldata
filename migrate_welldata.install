@@ -10,7 +10,7 @@ function migrate_welldata_enable() {
   foreach (glob($path . "/*.txt") as $file) {
     Migration::registerMigration('WellDataMigrate',
       pathinfo($file, PATHINFO_FILENAME),
-      array('source_file' => $path . '/' . $file));
+      array('source_file' => $path . "/" . $file));
   }
 }
 
