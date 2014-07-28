@@ -52,7 +52,7 @@ class WellDataMigrate extends Migration {
     // Create a MigrateSource object, which manages retrieving the input data.
     $this->source = new MigrateSourceCSV($arguments['source_file'], $this->csvcolumns(), array('header_rows'=>6), $this->fields());
 
-    $this->destination = new MigrateDestinationNode('migrate_welldata');
+    $this->destination = new MigrateDestinationEntity('migrate_welldata');
 
     $this->addFieldMapping('field_key', 'unkey')->description('see prepareKey');
     $this->addFieldMapping('field_serial', 'well serial')
