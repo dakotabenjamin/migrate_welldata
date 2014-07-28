@@ -40,7 +40,7 @@ class WellDataMigrate extends Migration {
     // Create a map object for tracking the relationships between source rows
     $this->map = new MigrateSQLMap($this->machineName,
         array(
-          'key' => array('type' => 'varchar',
+          'unkey' => array('type' => 'varchar',
                            'length' => 255,
                            'not null' => TRUE,
                            'description' => 'A unique key in the format [serial]-[datetime]',
@@ -50,11 +50,11 @@ class WellDataMigrate extends Migration {
       );
 
     // Create a MigrateSource object, which manages retrieving the input data.
-    $this->source = new MigrateSourceCSV($arguments['source_file'], $this->csvcolumns(), array(), $this->fields());
+    $this->source = new MigrateSourceCSV($arguments['source_file'], $this->csvcolumns(), array('header_rows'=>6), $this->fields());
 
     $this->destination = new MigrateDestinationNode('migrate_welldata');
 
-    $this->addFieldMapping('field_key', 'key')->description('see prepareKey');
+    $this->addFieldMapping('field_key', 'unkey')->description('see prepareKey');
     $this->addFieldMapping('field_serial', 'well serial')
          ->description('See prepareKey().');
     $this->addFieldMapping('field_date', 'date');
@@ -76,15 +76,16 @@ class WellDataMigrate extends Migration {
 
   public function prepareRow($row) {
     //skip header rows
-    if(preg_match('/^([1-9]|0[1-9]|[12][0-9]|3[01])\D([1-9]|0[1-9]|1[012])\D(19[0-9][0-9]|20[0-9][0-9])$/' ,$row->date) === FALSE) {
-      return FALSE;
-    }
+    //if(preg_match('/^([1-9]|0[1-9]|[12][0-9]|3[01])\D([1-9]|0[1-9]|1[012])\D(19[0-9][0-9]|20[0-9][0-9])$/' ,$row->date) === FALSE) {
+    //  return FALSE;
+    //}
     
     //Skip rows where level == --.-
     
     // convert to cm
     if($row->units == "in") {
       $row->level = $row->level * 2.54;
+      $row->units = "cm";
     }
     
   }
@@ -99,7 +100,8 @@ class WellDataMigrate extends Migration {
 
   public function fields() {
     return array(
-//      'well' => 'The reference serial made during prepareRow().',
+      'serial' => 'The reference serial made during prepareKey().',
+      'unkey' => 'The unique key',
       'level' => 'Level, manipulated during prepareRow().',
       'datetime' => 'The datetime, populated during prepareRow().',
     );
@@ -114,8 +116,8 @@ class WellDataMigrate extends Migration {
     // Turn date and time into datetime
     $row->datetime = strtotime($row->date . " " . $row->time);
     
-    $key = array($source_key[0] => $row->serial . "-" . $row->datetime);
-    $row->key = $key[$source_key[0]];
+    $key = array('unkey' => (string) $row->serial . "-" . (string) $row->datetime);
+    $row->unkey = $key;
     return $key;
   }
 }
