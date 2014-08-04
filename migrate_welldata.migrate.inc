@@ -19,12 +19,12 @@ function migrate_welldata_migrate_api() {
         'default_format' => 'filtered_html',
       ),
     ),
-    'migrations' => array(
-      'WellData' => array(
-        'class_name' => 'WellDataMigrate',
-        'group_name' => 'welldata',
-      ),
-    ),
+//    'migrations' => array(
+//      'WellData' => array(
+//        'class_name' => 'WellDataMigrate',
+//        'group_name' => 'welldata',
+//      ),
+//    ),
   );
   return $api;
 }
@@ -43,7 +43,6 @@ class WellDataMigrate extends Migration {
           'did' => array('type' => 'varchar',
                            'length' => 255,
                            'not null' => TRUE,
-                           'default' => '0000',
                            'description' => 'A unique key in the format [serial]-[datetime]',
                           ),
         ),
@@ -55,7 +54,7 @@ class WellDataMigrate extends Migration {
 
     $this->destination = new MigrateDestinationEntityAPI('well_data','well_data');
 
-    $this->addFieldMapping('did', 'did')->description('see prepareKey');
+    $this->addFieldMapping('did', 'did');
     $this->addFieldMapping('serial', 'serial')
          ->description('See prepareKey().');
     $this->addFieldMapping('date', 'date');
