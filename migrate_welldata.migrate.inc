@@ -35,34 +35,35 @@ function migrate_welldata_migrate_api() {
 class WellDataMigrate extends Migration {
   public function __construct($arguments) {
     parent::__construct($arguments);
-    $this->description = t('Import box scores from CSV file.');
+    $this->description = t('Import well data from CSV file.');
 
     // Create a map object for tracking the relationships between source rows
     $this->map = new MigrateSQLMap($this->machineName,
         array(
-          'unkey' => array('type' => 'varchar',
+          'did' => array('type' => 'varchar',
                            'length' => 255,
                            'not null' => TRUE,
+                           'default' => '0000',
                            'description' => 'A unique key in the format [serial]-[datetime]',
                           ),
         ),
-        MigrateDestinationNode::getKeySchema()
+        MigrateDestinationEntityAPI::getKeySchema()
       );
 
     // Create a MigrateSource object, which manages retrieving the input data.
     $this->source = new MigrateSourceCSV($arguments['source_file'], $this->csvcolumns(), array('header_rows'=>6), $this->fields());
 
-    $this->destination = new MigrateDestinationEntity('migrate_welldata');
+    $this->destination = new MigrateDestinationEntityAPI('well_data','well_data');
 
-    $this->addFieldMapping('field_key', 'unkey')->description('see prepareKey');
-    $this->addFieldMapping('field_serial', 'well serial')
+    $this->addFieldMapping('did', 'did')->description('see prepareKey');
+    $this->addFieldMapping('serial', 'serial')
          ->description('See prepareKey().');
-    $this->addFieldMapping('field_date', 'date');
-    $this->addFieldMapping('field_time1', 'time');
-    $this->addFieldMapping('field_datetime', 'datetime');
-    $this->addFieldMapping('field_level', 'level');
-    $this->addFieldMapping('field_units', 'units');
-    $this->addFieldMapping('field_well_calibration', 'calibration');
+    $this->addFieldMapping('date', 'date');
+    $this->addFieldMapping('time', 'time');
+    $this->addFieldMapping('datetime', 'datetime');
+    $this->addFieldMapping('level', 'level');
+    $this->addFieldMapping('units', 'units');
+//    $this->addFieldMapping('field_well_calibration', 'calibration');
 
   }
 
@@ -86,10 +87,8 @@ class WellDataMigrate extends Migration {
     if($row->units == "in") {
       $row->level = $row->level * 2.54;
       $row->units = "cm";
-    }
-    
+    } 
   }
-
   /**
    * Construct the machine name from the source file name.
    */
@@ -101,7 +100,7 @@ class WellDataMigrate extends Migration {
   public function fields() {
     return array(
       'serial' => 'The reference serial made during prepareKey().',
-      'unkey' => 'The unique key',
+      'did' => 'The unique key',
       'level' => 'Level, manipulated during prepareRow().',
       'datetime' => 'The datetime, populated during prepareRow().',
     );
@@ -116,8 +115,8 @@ class WellDataMigrate extends Migration {
     // Turn date and time into datetime
     $row->datetime = strtotime($row->date . " " . $row->time);
     
-    $key = array('unkey' => (string) $row->serial . "-" . (string) $row->datetime);
-    $row->unkey = $key;
+    $key = array('did' => (string) $row->serial . "-" . (string) $row->datetime);
+    $row->did = $key;
     return $key;
   }
 }

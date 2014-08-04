@@ -15,14 +15,14 @@ function migrate_welldata_enable() {
 }
 
 function migrate_welldata_uninstall() {
-  $bundle = 'migrate_welldata';
-  $field_names = array('field_date','field_time1','field_datetime','field_level','field_units','field_well_calibration','field_well');
+  $bundle = 'well_data';
+/*  $field_names = array('field_date','field_time1','field_datetime','field_level','field_units','field_well_calibration','field_mig_serial');
   foreach ($field_names as $field_name) {
     $instance = field_info_instance('node', $field_name, $bundle);
     field_delete_instance($instance);
     field_delete_field($field_name);
-  }
-  node_type_delete($bundle);
+  }*/
+//  node_type_delete($bundle);
 }
 
 function migrate_welldata_disable() {
